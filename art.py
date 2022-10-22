@@ -32,6 +32,19 @@ async def add(ctx: commands.Context, left: int, right: int):
     await ctx.send(str(left + right))
 
 @bot.command()
+async def roll(ctx: commands.Context, dice: str):
+    """Rolls a die in NdN format."""
+    try:
+        rolls, limit = map(int, dice.split("d"))
+    except ValueError:
+        await ctx.send("Format has to be in NdN!")
+        return
+
+    # _ is used in the generation of our result as we don't need the number that comes from the usage of range(rolls).
+    result = ", ".join(str(random.randint(1, limit)) for _ in range(rolls))
+    await ctx.send(result)
+
+@bot.command()
 async def art(ctx: commands.Context):
     """displays art from the met api."""
     url = ""
@@ -47,6 +60,29 @@ async def art(ctx: commands.Context):
     print(f"{str}\n{url}")
     #await ctx.send(f"here's some random art from the met {url}")
     await ctx.send(url)
+
+@bot.command()
+async def artsearch(ctx: commands.Context, term: str):
+    """search for a keyword and return a random result from the met"""
+    url = f"https://collectionapi.metmuseum.org/public/collection/v1/search?tags=true&q={term}"
+    response = requests.get(url)
+    ids = response.json()['objectIDs']
+    total=response.json()['total']
+    if total<=0:
+        await ctx.send("no results")
+    else: 
+        url = ""
+        while not url:
+            str = f"https://collectionapi.metmuseum.org/public/collection/v1/objects/{random.choice(ids)}"
+            response = requests.get(str)
+            try:
+                url = response.json()['primaryImage']
+            except KeyError:
+                print(f"keyerror\n{str}\n---")
+                url=""
+        url = url.replace(" ", "%20")
+        print(f"{str}\n{url}")
+        await ctx.send(url)
 
 
 bot.run(TOKEN)
