@@ -63,16 +63,31 @@ async def art(ctx: commands.Context):
 
 @bot.command()
 async def artsearch(ctx: commands.Context, term: str):
+    ids=[]
+    total=0
+    tries=0
     """search for a keyword and return a random result from the met"""
     url = f"https://collectionapi.metmuseum.org/public/collection/v1/search?tags=true&q={term}"
+    secondurl = f"https://collectionapi.metmuseum.org/public/collection/v1/search?title=true&q={term}"
     response = requests.get(url)
     ids = response.json()['objectIDs']
     total=response.json()['total']
+    if not ids:
+        ids = []
+    
+    response = requests.get(secondurl)
+    secondids = response.json()['objectIDs']
+    if not secondids:
+        secondids = []
+    ids.extend(secondids)
+    total+=response.json()['total']
+    ids = list(set(ids))
+
     if total<=0:
         await ctx.send("no results")
     else: 
         url = ""
-        while not url:
+        while not url and tries < 10:
             str = f"https://collectionapi.metmuseum.org/public/collection/v1/objects/{random.choice(ids)}"
             response = requests.get(str)
             try:
@@ -80,8 +95,12 @@ async def artsearch(ctx: commands.Context, term: str):
             except KeyError:
                 print(f"keyerror\n{str}\n---")
                 url=""
+            tries+=1
+        tries=0
         url = url.replace(" ", "%20")
         print(f"{str}\n{url}")
+        if not url:
+            url = "not found"
         await ctx.send(url)
 
 
