@@ -1,10 +1,13 @@
+#! /usr/bin/python3
 # art.py
 import os
+from tkinter import E
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
 import requests
 import random
+import asyncio
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -45,6 +48,47 @@ async def roll(ctx: commands.Context, dice: str):
     await ctx.send(result)
 
 @bot.command()
+async def ask(ctx: commands.Context):
+    """ask a jeopardy question and wait for a number response 1-3"""
+    numQuestions=5
+    idlist=[]
+    qlist = []
+    qlistlength=0
+    timeout=30
+    channel = ctx.channel
+    while qlistlength<=4: #check if there are too few qs in the category
+        response = requests.get("https://jservice.io/api/random")
+        categoryid = response.json()[0]['category_id']
+        questionlist = requests.get(f"https://jservice.io/api/clues?category={categoryid}")
+        print(f"{categoryid} amount in category: {len(questionlist.json())}")
+        qlistlength = len(questionlist.json())
+    newq=response.json()[0]
+    answernum = random.randint(1, numQuestions)
+    print(f"answer: {answernum}")
+    for i in range(numQuestions):
+        while newq['id'] in idlist: #check if q is already added by id
+            newq = random.choice(questionlist.json())
+        qlist.append(newq)
+        idlist.append(int(newq['id']))
+    await ctx.channel.send(f"Trivia category: {response.json()[0]['category']['title']}\n\n")
+    await ctx.channel.send(f"Question: {qlist[answernum-1]['question']}")
+    output=""
+    for i, e in enumerate(qlist):
+        output += f"{i+1} {e['answer']}\n"
+        #await ctx.send(f"{i+1}  {e['answer']}")
+    await ctx.send(output)
+
+    def check(m):
+        return m.content.isnumeric() and int(m.content[0])  == answernum and m.channel == channel
+
+    try:
+        msg = await bot.wait_for('message', check=check, timeout=timeout)
+    except asyncio.TimeoutError:
+        await ctx.channel.send(f"time's up, the answer was {answernum}")
+    else:
+        await ctx.channel.send("correct!")
+
+@bot.command()
 async def art(ctx: commands.Context):
     """displays art from the met api."""
     url = ""
@@ -63,10 +107,10 @@ async def art(ctx: commands.Context):
 
 @bot.command()
 async def artsearch(ctx: commands.Context, term: str):
+    """search for a keyword and return a random result from the met"""
     ids=[]
     total=0
     tries=0
-    """search for a keyword and return a random result from the met"""
     url = f"https://collectionapi.metmuseum.org/public/collection/v1/search?tags=true&q={term}"
     secondurl = f"https://collectionapi.metmuseum.org/public/collection/v1/search?title=true&q={term}"
     response = requests.get(url)
