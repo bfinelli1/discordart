@@ -1,7 +1,6 @@
 #! /usr/bin/python3
 # art.py
 import os
-from tkinter import E
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
@@ -48,7 +47,7 @@ async def roll(ctx: commands.Context, dice: str):
     await ctx.send(result)
 
 @bot.command()
-async def ask(ctx: commands.Context):
+async def q(ctx: commands.Context):
     """ask a jeopardy question and wait for a number response 1-3"""
     numQuestions=5
     idlist=[]
