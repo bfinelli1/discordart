@@ -4,9 +4,11 @@ import os
 import discord
 from dotenv import load_dotenv
 from discord.ext import commands
+from discord.ext import tasks
 import requests
 import random
 import asyncio
+import datetime
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -23,9 +25,23 @@ bot = commands.Bot(
     intents=intents,
 )
 
+
+
+#@tasks.loop(seconds=86400)
+@tasks.loop(time= datetime.time(hour=16, minute=00, tzinfo=datetime.timezone.utc))
+async def background_task():
+    channel = bot.get_channel(713669009593204809)
+    #await channel.send(url)
+    await channel.send("here's your daily art from the met")
+    await art(channel)
+
+
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})\n------")
+    background_task.start()
+
 
 
 @bot.command()
@@ -47,7 +63,7 @@ async def roll(ctx: commands.Context, dice: str):
     await ctx.send(result)
 
 @bot.command()
-async def q(ctx: commands.Context):
+async def ask(ctx: commands.Context):
     """ask a jeopardy question and wait for a number response 1-3"""
     numQuestions=5
     idlist=[]
