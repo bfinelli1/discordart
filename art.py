@@ -12,7 +12,6 @@ import datetime
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-print(TOKEN)
 intents = discord.Intents.all()
 
 response = requests.get("https://collectionapi.metmuseum.org/public/collection/v1/search?hasImages=true&isHighlight=true&q=*")
