@@ -107,6 +107,12 @@ async def background_task():
     await channel.send("here's your daily art from the met")
     await art(channel)
 
+@bot.command()
+async def lunch(ctx: commands.Context):
+    """is it lunchtime? what about the Garrison files?"""
+    await ctx.send("GO TO LUNCH!!")
+    await ctx.send("https://imgur.com/a/yqUzklM")
+
 @bot.event
 async def on_ready():
     print(f"Logged in as {bot.user} (ID: {bot.user.id})\n------")
